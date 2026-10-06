@@ -301,8 +301,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--brand);box-shadow:0 0
   const QUICK = ["Mithi Ganji","Dal","Gosht","Chaawal","Biryani","Kheer","Salad","Roti"];
   const STORE = "qc-order-draft";
 
-  // Logo (embedded via logo.js so PDF export works from a local file)
-  const logoSrc = window.QC_LOGO || "logo.png";
+  // Logo: websites use logo.png directly; opened as a local file, use the embedded copy in logo.js
+  // (browsers block PDF export of local images otherwise)
+  const logoSrc = location.protocol === "file:" ? (window.QC_LOGO || "logo.png") : "logo.png";
   $("topLogo").src = logoSrc;
   $("sheetLogo").src = logoSrc;
 
