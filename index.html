@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qureshi Caterers Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="logo.js"></script>
+<style>
+/* ============================================================
+   BRAND SETTINGS: change these to re-skin the whole portal + PDF
+   ============================================================ */
+:root{
+  --brand:        #B20B32;   /* crimson from logo */
+  --brand-deep:   #7E0722;
+  --ink:          #23323E;   /* slate from logo */
+  --ink-soft:     #5C6873;
+  --gold:         #B8975A;   /* hairline accent */
+  --gold-soft:    rgba(184,151,90,.55);
+  --brand-ring:   rgba(178,11,50,.18);
+  --paper:        #FFFFFF;
+  --cream:        #F7F3EE;
+  --line:         #E4DDD3;
+
+  --app-bg:       #EFEBE6;
+  --panel:        #FFFFFF;
+  --field:        #FBF9F6;
+  --field-line:   #DCD5CB;
+  --text:         #23323E;
+  --muted:        #6E7882;
+
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans:  "Manrope", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --app-bg:#15191D; --panel:#1E2328; --field:#252B31; --field-line:#36404A;
+    --text:#ECE7E1; --muted:#9AA3AC; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --app-bg:#15191D; --panel:#1E2328; --field:#252B31; --field-line:#36404A;
+  --text:#ECE7E1; --muted:#9AA3AC; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--app-bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ---------------- App shell ---------------- */
+.topbar{display:flex;align-items:center;gap:14px;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--field-line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.topbar img{height:38px;background:#fff;border-radius:6px;padding:2px 4px}
+.topbar h1{font-family:var(--serif);font-weight:600;font-size:22px;margin:0;letter-spacing:.01em}
+.topbar .sub{color:var(--muted);font-size:12px;margin-left:auto}
+@media (max-width:640px){.topbar{padding:12px 16px}.topbar .sub{display:none}}
+
+.layout{display:grid;grid-template-columns:minmax(360px,440px) 1fr;gap:24px;padding:24px;max-width:1500px;margin:0 auto;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr;padding:16px}}
+
+.form{min-width:0;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;padding:20px}
+.section{padding:4px 0 18px;margin-bottom:16px;border-bottom:1px solid var(--field-line)}
+.section:last-of-type{border-bottom:0;margin-bottom:0}
+.section h2{font-family:var(--serif);font-size:19px;font-weight:600;margin:0 0 12px;display:flex;align-items:baseline;gap:8px}
+.section h2 span{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--brand);letter-spacing:.12em}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row>*{min-width:0}
+input,textarea,select{min-width:0}
+label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 5px;letter-spacing:.02em}
+.f{margin-bottom:10px}
+input,textarea,select{width:100%;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--field-line);border-radius:8px;padding:9px 11px;outline:none;transition:border-color .15s, box-shadow .15s}
+textarea{resize:vertical;min-height:62px}
+input:focus,textarea:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-ring)}
+
+.items{display:flex;flex-direction:column;gap:8px}
+.item{display:grid;grid-template-columns:1fr 32px;gap:6px}
+.icon-btn{border:1px solid var(--field-line);background:var(--field);color:var(--muted);border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+.icon-btn:hover{color:var(--brand);border-color:var(--brand)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.chip{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px dashed var(--field-line);background:transparent;color:var(--muted);cursor:pointer}
+.chip:hover{border-style:solid;border-color:var(--brand);color:var(--brand)}
+.add{margin-top:10px;font:inherit;font-weight:600;font-size:12.5px;color:var(--brand);background:none;border:0;cursor:pointer;padding:4px 0}
+
+.actions{display:flex;gap:10px;margin-top:18px;position:sticky;bottom:0;background:var(--panel);padding-top:12px}
+.btn{flex:1;font:inherit;font-weight:700;font-size:14px;padding:13px 16px;border-radius:10px;border:0;cursor:pointer;letter-spacing:.02em}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-deep)}
+.btn-primary:disabled{opacity:.6;cursor:wait}
+.btn-ghost{flex:0 0 auto;background:transparent;color:var(--muted);border:1px solid var(--field-line)}
+.btn-ghost:hover{color:var(--text)}
+
+.preview-wrap{position:sticky;top:90px;min-width:0}
+@media (max-width:980px){.preview-wrap{position:static}}
+.preview-label{font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--muted);margin:0 0 10px}
+.stage{width:100%;overflow:hidden}
+.stage-inner{transform-origin:top left}
+
+/* ---------------- The A4 sheet (what becomes the PDF) ---------------- */
+.sheet{width:794px;height:1123px;background:var(--paper);color:var(--ink);position:relative;font-family:var(--sans);box-shadow:0 12px 40px rgba(20,25,30,.16);overflow:hidden}
+.sheet .frame{position:absolute;inset:22px;border:1px solid var(--gold);pointer-events:none}
+.sheet .frame::after{content:"";position:absolute;inset:4px;border:.5px solid var(--gold-soft)}
+.sheet .band{position:absolute;left:0;right:0;top:0;height:6px;background:var(--brand)}
+.sheet-body{position:absolute;inset:52px 58px 0;display:flex;flex-direction:column}
+
+.s-head{display:flex;justify-content:space-between;align-items:flex-start}
+.s-head img{height:104px}
+.s-title{text-align:right;padding-top:6px}
+.s-title .kicker{font-size:9.5px;font-weight:700;letter-spacing:.32em;color:var(--brand)}
+.s-title h3{font-family:var(--serif);font-weight:600;font-size:38px;line-height:1;margin:6px 0 12px;color:var(--ink)}
+.s-meta{display:grid;grid-template-columns:auto auto;gap:4px 14px;justify-content:end;font-size:11px}
+.s-meta dt{color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase;font-size:9.5px;font-weight:600;padding-top:1px}
+.s-meta dd{margin:0;font-weight:600;text-align:right}
+
+.ornament{display:flex;align-items:center;gap:12px;margin:22px 0 24px;color:var(--gold)}
+.ornament::before,.ornament::after{content:"";flex:1;height:1px;background:var(--gold)}
+.ornament i{width:6px;height:6px;transform:rotate(45deg);border:1px solid var(--gold);display:block}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--cream);border-radius:4px;padding:16px 18px 6px}
+.card h4,.block h4{margin:0 0 10px;font-size:9.5px;font-weight:700;letter-spacing:.28em;color:var(--brand);text-transform:uppercase}
+.kv{display:grid;grid-template-columns:86px 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:baseline}
+.kv:first-of-type{border-top:0}
+.kv b{font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase}
+.kv span{font-weight:600;min-height:16px;white-space:pre-wrap;word-break:break-word}
+.kv.big span{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.15}
+
+.block{margin-top:22px}
+.menu{width:100%;border-collapse:collapse;font-size:13px}
+.menu th{font-size:9.5px;font-weight:700;letter-spacing:.2em;color:var(--ink-soft);text-transform:uppercase;text-align:left;padding:0 0 8px;border-bottom:1.5px solid var(--ink)}
+.menu td{padding:10px 0;border-bottom:1px solid var(--line)}
+.menu td.n{width:34px;color:var(--gold);font-family:var(--serif);font-size:15px;font-weight:600}
+.menu td.name{font-weight:600}
+.menu tr.empty td{color:#B9B2A8;font-style:italic}
+
+.thaal{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:12px 18px;background:var(--ink);color:#fff;border-radius:4px}
+.thaal small{font-size:9.5px;letter-spacing:.28em;font-weight:700;text-transform:uppercase;opacity:.85}
+.thaal strong{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1}
+
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.note{border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-height:78px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+
+.sign{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:22px}
+.sign .thanks{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--ink-soft)}
+.sign .line{width:270px;white-space:nowrap;text-align:center;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+.sign .line::before{content:"";display:block;border-top:1px solid var(--ink);margin-bottom:8px}
+
+.s-foot{margin:0;padding:14px 0 40px;display:flex;justify-content:center;gap:34px;font-size:10.5px;font-weight:600;letter-spacing:.06em;color:var(--ink);border-top:1px solid var(--line)}
+.s-foot span{display:flex;align-items:center;gap:7px}
+.s-foot svg{width:13px;height:13px;stroke:var(--brand);fill:none;stroke-width:1.8}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;transition:.25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .topbar,.form,.preview-label,.toast{display:none!important}
+  .layout{display:block;padding:0}
+  .preview-wrap{position:static}
+  .stage-inner{transform:none!important}
+  .sheet{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <img id="topLogo" alt="Qureshi Caterers">
+  <h1>Order Portal</h1>
+  <div class="sub">Fill in the order details and download the PDF</div>
+</header>
+
+<main class="layout">
+  <!-- ================= FORM ================= -->
+  <form class="form" id="form" autocomplete="off" onsubmit="return false">
+    <div class="section">
+      <h2><span>01</span> Order</h2>
+      <div class="row">
+        <div class="f"><label for="orderNo">Order No.</label><input id="orderNo"></div>
+        <div class="f"><label for="orderDate">Date of order</label><input id="orderDate" type="date"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span>02</span> Customer</h2>
+      <div class="f"><label for="name">Name</label><input id="name" placeholder="e.g. M. Hatim Abbas bhai Azad"></div>
+      <div class="row">
+        <div class="f"><label for="phone">Phone No.</label><input id="phone" inputmode="tel" placeholder="+965 …"></div>
+        <div class="f"><label for="its">ITS No.</label><input id="its" inputmode="numeric" placeholder="e.g. 50492287"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span>03</span> Delivery</h2>
+      <div class="f"><label for="address">Address</label><textarea id="address" rows="2" placeholder="e.g. Badri Markaz, Salmiya"></textarea></div>
+      <div class="row">
+        <div class="f"><label for="delDate">Date</label><input id="delDate" type="date"></div>
+        <div class="f"><label for="delTime">Time</label><input id="delTime" type="time"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span>04</span> Items to be delivered</h2>
+      <div class="items" id="items"></div>
+      <button type="button" class="add" id="addItem">+ Add item</button>
+      <div class="chips" id="chips"></div>
+      <div class="f" style="margin-top:14px"><label for="thaal">Number of Thaal</label><input id="thaal" inputmode="numeric" placeholder="e.g. 50"></div>
+    </div>
+
+    <div class="section">
+      <h2><span>05</span> Instructions & notes</h2>
+      <div class="f"><label for="special">Special instructions</label><textarea id="special" rows="2"></textarea></div>
+      <div class="f"><label for="notes">Notes</label><textarea id="notes" rows="2"></textarea></div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" id="reset">New order</button>
+      <button type="button" class="btn btn-primary" id="download">Download PDF</button>
+    </div>
+  </form>
+
+  <!-- ================= PREVIEW ================= -->
+  <section class="preview-wrap">
+    <p class="preview-label">LIVE PREVIEW · A4</p>
+    <div class="stage" id="stage">
+      <div class="stage-inner" id="stageInner">
+        <div class="sheet" id="sheet">
+          <div class="band"></div>
+          <div class="frame"></div>
+          <div class="sheet-body">
+            <div class="s-head">
+              <img id="sheetLogo" alt="Qureshi Caterers">
+              <div class="s-title">
+                <div class="kicker">QURESHI CATERERS</div>
+                <h3>Delivery Order</h3>
+                <dl class="s-meta">
+                  <dt>Order No.</dt><dd data-out="orderNo"></dd>
+                  <dt>Date of Order</dt><dd data-out="orderDate"></dd>
+                </dl>
+              </div>
+            </div>
+
+            <div class="ornament"><i></i></div>
+
+            <div class="cards">
+              <div class="card">
+                <h4>Customer Details</h4>
+                <div class="kv big"><b>Name</b><span data-out="name"></span></div>
+                <div class="kv"><b>Phone No.</b><span data-out="phone"></span></div>
+                <div class="kv"><b>ITS No.</b><span data-out="its"></span></div>
+              </div>
+              <div class="card">
+                <h4>Delivery Details</h4>
+                <div class="kv big"><b>Address</b><span data-out="address"></span></div>
+                <div class="kv"><b>Date</b><span data-out="delDate"></span></div>
+                <div class="kv"><b>Time</b><span data-out="delTime"></span></div>
+              </div>
+            </div>
+
+            <div class="block">
+              <h4>Items to be Delivered</h4>
+              <table class="menu">
+                <thead><tr><th></th><th>Item</th></tr></thead>
+                <tbody id="menuBody"></tbody>
+              </table>
+              <div class="thaal"><small>Number of Thaal</small><strong data-out="thaal"></strong></div>
+            </div>
+
+            <div class="block notes">
+              <div><h4>Special Instructions</h4><div class="note" data-out="special"></div></div>
+              <div><h4>Notes</h4><div class="note" data-out="notes"></div></div>
+            </div>
+
+            <div class="sign">
+              <div class="thanks">With gratitude, Qureshi Caterers</div>
+              <div class="line">Stamp &amp; Signature · Authorised Person</div>
+            </div>
+
+            <!-- FOOTER CONTACTS: edit these three lines -->
+            <div class="s-foot">
+              <span><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>+965 9958 5768</span>
+              <span><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6"/></svg>QURESHI_CATERERS</span>
+              <span><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>SALMIYA BLOCK 10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const FIELDS = ["orderNo","orderDate","name","phone","its","address","delDate","delTime","thaal","special","notes"];
+  const QUICK = ["Mithi Ganji","Dal","Gosht","Chaawal","Biryani","Kheer","Salad","Roti"];
+  const STORE = "qc-order-draft";
+
+  // Logo (embedded via logo.js so PDF export works from a local file)
+  const logoSrc = window.QC_LOGO || "logo.png";
+  $("topLogo").src = logoSrc;
+  $("sheetLogo").src = logoSrc;
+
+  // ---------- helpers ----------
+  const pad = n => String(n).padStart(2, "0");
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+  const fmtDate = v => { if (!v) return ""; const [y,m,d] = v.split("-"); return `${d}/${m}/${y}`; };
+  const fmtTime = v => {
+    if (!v) return "";
+    let [h, m] = v.split(":").map(Number);
+    const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+    return m ? `${h}:${pad(m)} ${ap}` : `${h} ${ap}`;
+  };
+  const newOrderNo = () => {
+    const d = new Date();
+    return `QC-${String(d.getFullYear()).slice(2)}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  };
+  const toast = msg => { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200); };
+
+  // ---------- items ----------
+  function addItem(item = {name:""}) {
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <input class="i-name" placeholder="Item" aria-label="Item">
+      <button type="button" class="icon-btn" aria-label="Remove item">×</button>`;
+    row.querySelector(".i-name").value = item.name;
+    row.querySelector("button").onclick = () => { row.remove(); render(); };
+    $("items").appendChild(row);
+    return row;
+  }
+  const getItems = () => [...$("items").children].map(r => ({
+    name: r.querySelector(".i-name").value.trim()
+  }));
+
+  QUICK.forEach(name => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = "+ " + name;
+    b.onclick = () => {
+      const blank = [...$("items").children].find(r => !r.querySelector(".i-name").value.trim());
+      const row = blank || addItem();
+      row.querySelector(".i-name").value = name;
+      render();
+    };
+    $("chips").appendChild(b);
+  });
+  $("addItem").onclick = () => { addItem().querySelector(".i-name").focus(); };
+
+  // ---------- render ----------
+  function data() {
+    const o = {}; FIELDS.forEach(f => o[f] = $(f).value); o.items = getItems(); return o;
+  }
+  function render() {
+    const d = data();
+    const out = {
+      ...d,
+      orderDate: fmtDate(d.orderDate),
+      delDate: fmtDate(d.delDate),
+      delTime: fmtTime(d.delTime),
+      thaal: d.thaal.trim() ? (/^\d+(\.\d+)?$/.test(d.thaal.trim()) ? `${d.thaal.trim()} Thaal` : d.thaal.trim()) : "—",
+    };
+    document.querySelectorAll("[data-out]").forEach(el => el.textContent = out[el.dataset.out] || "");
+
+    const body = $("menuBody"); body.innerHTML = "";
+    const items = d.items.filter(i => i.name);
+    if (!items.length) {
+      body.innerHTML = `<tr class="empty"><td class="n"></td><td>Items will appear here</td></tr>`;
+    } else {
+      items.forEach((it, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="n">${pad(i+1)}</td><td class="name"></td>`;
+        tr.children[1].textContent = it.name;
+        body.appendChild(tr);
+      });
+    }
+    try { localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+  }
+
+  // ---------- scale preview to fit ----------
+  function fit() {
+    const w = $("stage").clientWidth;
+    const s = Math.min(1, w / 794);
+    $("stageInner").style.transform = `scale(${s})`;
+    $("stage").style.height = (1123 * s) + "px";
+  }
+  window.addEventListener("resize", fit);
+
+  // ---------- load / reset ----------
+  function load(d) {
+    FIELDS.forEach(f => $(f).value = d[f] || "");
+    $("items").innerHTML = "";
+    (d.items && d.items.length ? d.items : [{name:""}]).forEach(addItem);
+    render();
+  }
+  function fresh() {
+    load({ orderNo: newOrderNo(), orderDate: today(), delDate: today() });
+  }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || "null"); } catch (e) {}
+  saved ? load(saved) : fresh();
+
+  $("form").addEventListener("input", render);
+  $("form").addEventListener("change", render);
+  // Two taps to clear (confirm() dialogs don't work when hosted)
+  let resetArmed = null;
+  $("reset").onclick = () => {
+    const b = $("reset");
+    if (!resetArmed) {
+      b.textContent = "Tap again to clear";
+      resetArmed = setTimeout(() => { b.textContent = "New order"; resetArmed = null; }, 3000);
+      return;
+    }
+    clearTimeout(resetArmed); resetArmed = null; b.textContent = "New order";
+    fresh(); toast("New order started");
+  };
+
+  // When hosted on claude.ai, files are saved through the viewer's download prompt
+  const hosted = !!(window.claude && window.claude.use);
+  const downloadsReady = hosted ? window.claude.use("downloads").catch(() => null) : Promise.resolve(null);
+
+  // ---------- PDF ----------
+  $("download").onclick = async () => {
+    const btn = $("download");
+    if (!window.html2canvas || !window.jspdf) {
+      if (hosted) { toast("The PDF tools didn't load. Check your connection and reload."); return; }
+      toast("PDF tools didn't load (offline?). Opening print instead."); window.print(); return;
+    }
+    btn.disabled = true; btn.textContent = "Generating…";
+    try {
+      await document.fonts.ready;
+      // render an untransformed copy so the PDF is full-resolution
+      const clone = $("sheet").cloneNode(true);
+      clone.style.boxShadow = "none";
+      const holder = document.createElement("div");
+      holder.style.cssText = "position:fixed;left:-10000px;top:0;";
+      holder.appendChild(clone); document.body.appendChild(holder);
+      const canvas = await html2canvas(clone, { scale: 3, backgroundColor: "#ffffff", useCORS: true, logging: false });
+      holder.remove();
+
+      const pdf = new jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+      const d = data();
+      const who = (d.name || "Order").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-");
+      const filename = `${d.orderNo || "QC"}_${who}.pdf`;
+      const downloads = await downloadsReady;
+      if (downloads) {
+        try {
+          await downloads.save({ filename, data: pdf.output("blob") });
+          toast("PDF saved");
+        } catch (e) {
+          if (e && e.code === "declined") toast("Download cancelled");
+          else if (e && e.code === "rate_limited") toast("A save prompt is already open");
+          else toast("Saving isn't available here");
+        }
+      } else if (hosted) {
+        toast("Saving isn't available in this view");
+      } else {
+        pdf.save(filename);
+        toast("PDF downloaded");
+      }
+    } catch (err) {
+      console.error(err);
+      if (hosted) toast("Couldn't build the PDF. Reload the page and try again.");
+      else { toast("Couldn't build the PDF. Opening print instead."); window.print(); }
+    } finally {
+      btn.disabled = false; btn.textContent = "Download PDF";
+    }
+  };
+
+  document.fonts.ready.then(fit); fit();
+})();
+</script>
+</body>
+</html>
